@@ -24,16 +24,13 @@ impl GameMap {
             tiles[size.0 * i] = Tile::Wall;
             tiles[size.0 * i + size.0 - 1] = Tile::Wall;
         }
-        GameMap { tiles, size: size }
+        GameMap { tiles, size }
     }
 
     pub fn draw(&mut self, ctx: &mut BTerm) {
         for i in 0..self.size.0 {
             for j in 0..self.size.1 {
-                match self.tile_at(&(i, j)) {
-                    Tile::Wall => ctx.print(i, j, "\u{2588}"),
-                    _ => {}
-                };
+                if let Tile::Wall = self.tile_at(&(i, j)) { ctx.print(i, j, "\u{2588}") };
             }
         }
     }

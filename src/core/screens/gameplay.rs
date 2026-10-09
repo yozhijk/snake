@@ -94,11 +94,7 @@ impl Gameplay {
 
     fn yummy(&mut self) -> bool {
         let ahead = self.snake.ahead();
-        if ahead == self.rabbit.pos {
-            true
-        } else {
-            false
-        }
+        ahead == self.rabbit.pos
     }
 
     fn draw_rabbit(&self, ctx: &mut BTerm) {
