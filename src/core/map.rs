@@ -13,7 +13,7 @@ pub struct GameMap {
 }
 
 impl GameMap {
-    pub fn new(size: &(usize, usize)) -> Self {
+    pub fn new(size: (usize, usize)) -> Self {
         let mut tiles = vec![Tile::Empty; size.0 * size.1];
         // create horizontal walls
         for i in 0..size.0 {
@@ -24,7 +24,7 @@ impl GameMap {
             tiles[size.0 * i] = Tile::Wall;
             tiles[size.0 * i + size.0 - 1] = Tile::Wall;
         }
-        GameMap { tiles, size: *size }
+        GameMap { tiles, size: size }
     }
 
     pub fn draw(&mut self, ctx: &mut BTerm) {

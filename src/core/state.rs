@@ -1,33 +1,25 @@
-use super::screens::ExitReason;
+use super::screens::gameplay::Outcome;
 use super::screens::{Gameplay, Menu, Results};
 
 use bracket_lib::terminal::GameState;
 use bracket_terminal::prelude::*;
 
-pub enum GameMode {
-    Menu,
-    Gameplay,
-    Results,
+pub enum Screen {
+    Menu(Menu),
+    Gameplay(Gameplay),
+    Results(Results),
 }
 
 pub struct State {
-    // current screen
-    mode: GameMode,
-    // menu screen
-    menu: Menu,
-    // gameplay screen
-    gameplay: Gameplay,
-    // result screen
-    results: Results,
+    screen: Screen,
+    map_size: (usize, usize),
 }
 
 impl State {
-    pub fn new(map_size: &(usize, usize)) -> Self {
+    pub fn new(map_size: (usize, usize)) -> Self {
         State {
-            mode: GameMode::Menu,
-            menu: Menu::new(),
-            gameplay: Gameplay::new(map_size),
-            results: Results::new(),
+            screen: Screen::Menu(Menu::new()),
+            map_size,
         }
     }
 }
@@ -37,18 +29,15 @@ impl GameState for State {
         // clear the screen
         ctx.cls();
 
-        match self.mode {
+        match self.screen {
             // show game menu screen in Game::Menu mode
-            GameMode::Menu => {
+            Screen::Menu(ref mut menu) => {
                 // update menu
-                self.menu.tick(ctx);
-                // check if anything has been selected
-                if let Some(choice) = self.menu.choice() {
+                if let Some(choice) = menu.tick(ctx) {
                     match choice {
                         0 => {
                             // new game selected
-                            self.mode = GameMode::Gameplay;
-                            self.gameplay.reset()
+                            self.screen = Screen::Gameplay(Gameplay::new(self.map_size))
                         }
                         // exit selected
                         2 => ctx.quit(),
@@ -58,21 +47,18 @@ impl GameState for State {
                 }
             }
             // update gameplay
-            GameMode::Gameplay => {
-                self.gameplay.tick(ctx);
-                // check if gameplay has ended
-                if let Some(reason) = self.gameplay.exit() {
-                    match reason {
-                        ExitReason::EscapePressed => self.mode = GameMode::Menu,
-                        ExitReason::PlayerDead => self.mode = GameMode::Results,
+            Screen::Gameplay(ref mut gameplay) => {
+                if let Some(outcome) = gameplay.tick(ctx) {
+                    match outcome {
+                        Outcome::EscapePressed => self.screen = Screen::Menu(Menu::new()),
+                        Outcome::PlayerDead => self.screen = Screen::Results(Results::new()),
                     }
                 }
             }
-            GameMode::Results => {
-                self.results.tick(ctx);
-                if let Some(done) = self.results.done() {
+            Screen::Results(ref mut results) => {
+                if let Some(done) = results.tick(ctx) {
                     if done {
-                        self.mode = GameMode::Menu;
+                        self.screen = Screen::Menu(Menu::new());
                     }
                 }
             }

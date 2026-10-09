@@ -8,11 +8,7 @@ impl Results {
         Results { done: None }
     }
 
-    pub fn done(&mut self) -> Option<bool> {
-        self.done.take()
-    }
-
-    pub fn tick(&mut self, ctx: &mut BTerm) {
+    pub fn tick(&mut self, ctx: &mut BTerm) -> Option<bool> {
         let x = 5;
         let y = 8;
         ctx.print_color(x, y, RGBA::named(WHITE), RGBA::named(BLACK), "Game Over");
@@ -23,5 +19,7 @@ impl Results {
                 self.done = Some(true);
             }
         }
+
+        self.done.take()
     }
 }

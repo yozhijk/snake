@@ -2,7 +2,7 @@ use crate::core::{GameMap, Tile};
 use bracket_terminal::prelude::*;
 use std::collections::VecDeque;
 
-pub enum ExitReason {
+pub enum Outcome {
     EscapePressed,
     PlayerDead,
 }
@@ -20,29 +20,24 @@ pub struct Gameplay {
     map: GameMap,
     snake: Snake,
     rabbit: Rabbit,
-    exit_reason: Option<ExitReason>,
+    outcome: Option<Outcome>,
 }
 
 impl Gameplay {
-    fn random_rabbit(map_size: &(usize, usize)) -> Rabbit {
+    fn random_rabbit(map_size: (usize, usize)) -> Rabbit {
         let x = rand::random::<usize>() % (map_size.0 - 2) + 1;
         let y = rand::random::<usize>() % (map_size.1 - 2) + 1;
 
         Rabbit { pos: (x, y) }
     }
 
-    pub fn new(map_size: &(usize, usize)) -> Self {
+    pub fn new(map_size: (usize, usize)) -> Self {
         Gameplay {
             map: GameMap::new(map_size),
             snake: Snake::new(&(map_size.0 / 2, map_size.1 / 2)),
             rabbit: Gameplay::random_rabbit(map_size),
-            exit_reason: None,
+            outcome: None,
         }
-    }
-
-    pub fn reset(&mut self) {
-        self.snake = Snake::new(&(self.map.size.0 / 2, self.map.size.1 / 2));
-        self.rabbit = Self::random_rabbit(&self.map.size);
     }
 
     fn handle_input(&mut self, ctx: &mut BTerm) {
@@ -52,30 +47,28 @@ impl Gameplay {
                 VirtualKeyCode::Down => self.snake.vel = (0, 1),
                 VirtualKeyCode::Left => self.snake.vel = (-1, 0),
                 VirtualKeyCode::Right => self.snake.vel = (1, 0),
-                VirtualKeyCode::Escape => self.exit_reason = Some(ExitReason::EscapePressed),
+                VirtualKeyCode::Escape => self.outcome = Some(Outcome::EscapePressed),
                 _ => {}
             }
         }
     }
 
-    pub fn exit(&mut self) -> Option<ExitReason> {
-        self.exit_reason.take()
-    }
-
-    pub fn tick(&mut self, ctx: &mut BTerm) {
+    pub fn tick(&mut self, ctx: &mut BTerm) -> Option<Outcome> {
         self.handle_input(ctx);
         if self.hit_walls() {
-            self.exit_reason = Some(ExitReason::PlayerDead);
+            self.outcome = Some(Outcome::PlayerDead);
         } else {
             let yummy = self.yummy();
             if yummy {
-                self.rabbit = Gameplay::random_rabbit(&self.map.size);
+                self.rabbit = Gameplay::random_rabbit(self.map.size);
             }
             self.snake.advect(yummy);
             self.map.draw(ctx);
             self.draw_rabbit(ctx);
             self.snake.draw(ctx);
         }
+
+        self.outcome.take()
     }
 
     fn hit_walls(&mut self) -> bool {

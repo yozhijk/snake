@@ -14,7 +14,7 @@ impl Menu {
         }
     }
 
-    pub fn tick(&mut self, ctx: &mut BTerm) {
+    pub fn tick(&mut self, ctx: &mut BTerm) -> Option<usize> {
         self.handle_input(ctx);
 
         let x = 5;
@@ -33,9 +33,7 @@ impl Menu {
         }
 
         ctx.draw_hollow_box(1, 1, 20, 14, RGBA::named(WHITE), RGBA::named(BLACK));
-    }
 
-    pub fn choice(&mut self) -> Option<usize> {
         self.choice.take()
     }
 

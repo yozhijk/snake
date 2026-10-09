@@ -1,5 +1,5 @@
 mod map;
-mod screens;
+pub mod screens;
 mod state;
 
 pub use map::{GameMap, Tile};
