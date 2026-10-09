@@ -57,10 +57,8 @@ impl GameState for State {
                 }
             }
             Screen::Results(ref mut results) => {
-                if let Some(done) = results.tick(ctx) {
-                    if done {
-                        self.screen = Screen::Menu(Menu::new());
-                    }
+                if results.tick(ctx).is_some() {
+                    self.screen = Screen::Menu(Menu::new());
                 }
             }
         }
