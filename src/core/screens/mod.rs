@@ -1,5 +1,5 @@
 pub mod gameplay;
-mod menu;
+pub mod menu;
 mod results;
 
 pub use gameplay::Gameplay;

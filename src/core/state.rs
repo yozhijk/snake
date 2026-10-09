@@ -1,4 +1,5 @@
 use super::screens::gameplay::Outcome;
+use super::screens::menu::Selection;
 use super::screens::{Gameplay, Menu, Results};
 
 use bracket_lib::terminal::GameState;
@@ -33,15 +34,15 @@ impl GameState for State {
             // show game menu screen in Game::Menu mode
             Screen::Menu(ref mut menu) => {
                 // update menu
-                if let Some(choice) = menu.tick(ctx) {
-                    match choice {
-                        0 => {
+                if let Some(sel) = menu.tick(ctx) {
+                    match sel {
+                        Selection::NewGame => {
                             // new game selected
                             self.screen = Screen::Gameplay(Gameplay::new(self.map_size))
                         }
                         // exit selected
-                        2 => ctx.quit(),
-                        // nothing selected
+                        Selection::Exit => ctx.quit(),
+                        // Options
                         _ => (),
                     }
                 }
@@ -50,7 +51,7 @@ impl GameState for State {
             Screen::Gameplay(ref mut gameplay) => {
                 if let Some(outcome) = gameplay.tick(ctx) {
                     match outcome {
-                        Outcome::EscapePressed => self.screen = Screen::Menu(Menu::new()),
+                        Outcome::MenuRequest => self.screen = Screen::Menu(Menu::new()),
                         Outcome::PlayerDead => self.screen = Screen::Results(Results::new()),
                     }
                 }

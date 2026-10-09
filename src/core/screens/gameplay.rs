@@ -3,7 +3,7 @@ use bracket_terminal::prelude::*;
 use std::collections::VecDeque;
 
 pub enum Outcome {
-    EscapePressed,
+    MenuRequest,
     PlayerDead,
 }
 
@@ -20,7 +20,6 @@ pub struct Gameplay {
     map: GameMap,
     snake: Snake,
     rabbit: Rabbit,
-    outcome: Option<Outcome>,
 }
 
 impl Gameplay {
@@ -36,27 +35,42 @@ impl Gameplay {
             map: GameMap::new(map_size),
             snake: Snake::new(&(map_size.0 / 2, map_size.1 / 2)),
             rabbit: Gameplay::random_rabbit(map_size),
-            outcome: None,
         }
     }
 
-    fn handle_input(&mut self, ctx: &mut BTerm) {
+    fn handle_input(&mut self, ctx: &mut BTerm) -> Option<Outcome> {
         if let Some(key) = ctx.key {
             match key {
-                VirtualKeyCode::Up => self.snake.vel = (0, -1),
-                VirtualKeyCode::Down => self.snake.vel = (0, 1),
-                VirtualKeyCode::Left => self.snake.vel = (-1, 0),
-                VirtualKeyCode::Right => self.snake.vel = (1, 0),
-                VirtualKeyCode::Escape => self.outcome = Some(Outcome::EscapePressed),
-                _ => {}
+                VirtualKeyCode::Up => {
+                    self.snake.vel = (0, -1);
+                    None
+                }
+                VirtualKeyCode::Down => {
+                    self.snake.vel = (0, 1);
+                    None
+                }
+                VirtualKeyCode::Left => {
+                    self.snake.vel = (-1, 0);
+                    None
+                }
+                VirtualKeyCode::Right => {
+                    self.snake.vel = (1, 0);
+                    None
+                }
+                VirtualKeyCode::Escape => Some(Outcome::MenuRequest),
+                _ => None,
             }
+        } else {
+            None
         }
     }
 
     pub fn tick(&mut self, ctx: &mut BTerm) -> Option<Outcome> {
-        self.handle_input(ctx);
-        if self.hit_walls() {
-            self.outcome = Some(Outcome::PlayerDead);
+        let sel = self.handle_input(ctx);
+        if sel.is_some() {
+            sel
+        } else if self.hit_walls() {
+            Some(Outcome::PlayerDead)
         } else {
             let yummy = self.yummy();
             if yummy {
@@ -66,9 +80,8 @@ impl Gameplay {
             self.map.draw(ctx);
             self.draw_rabbit(ctx);
             self.snake.draw(ctx);
+            None
         }
-
-        self.outcome.take()
     }
 
     fn hit_walls(&mut self) -> bool {

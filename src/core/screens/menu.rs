@@ -1,45 +1,51 @@
 use bracket_terminal::prelude::*;
+
+#[derive(Copy, Clone)]
+pub enum Selection {
+    NewGame,
+    Options,
+    Exit,
+}
+
 pub struct Menu {
     // current active menu item
     active_idx: usize,
-    //
-    choice: Option<usize>,
 }
+
+static ITEMS: [(&str, Selection); 3] = [
+    ("1. New Game", Selection::NewGame),
+    ("2. Options", Selection::Options),
+    ("3. Exit", Selection::Exit),
+];
 
 impl Menu {
     pub fn new() -> Self {
-        Menu {
-            active_idx: 0,
-            choice: None,
-        }
+        Menu { active_idx: 0 }
     }
 
-    pub fn tick(&mut self, ctx: &mut BTerm) -> Option<usize> {
-        self.handle_input(ctx);
+    pub fn tick(&mut self, ctx: &mut BTerm) -> Option<Selection> {
+        let selection = self.handle_input(ctx);
 
         let x = 5;
         let mut y = 5;
-        let items = vec!["1. New Game", "2. Options", "3. Exit"];
 
-        for i in 0..items.len() {
+        for i in 0..ITEMS.len() {
             let col = if i == self.active_idx {
                 RGBA::named(RED)
             } else {
                 RGBA::named(GREEN)
             };
 
-            ctx.print_color(x, y, col, RGBA::named(BLACK), items[i]);
+            ctx.print_color(x, y, col, RGBA::named(BLACK), ITEMS[i].0);
             y += 3
         }
 
         ctx.draw_hollow_box(1, 1, 20, 14, RGBA::named(WHITE), RGBA::named(BLACK));
-
-        self.choice.take()
+        selection
     }
 
-    fn handle_input(&mut self, ctx: &mut BTerm) {
+    fn handle_input(&mut self, ctx: &mut BTerm) -> Option<Selection> {
         match ctx.key {
-            None => {}
             Some(key) => match key {
                 // handle menu down
                 VirtualKeyCode::Down => {
@@ -47,7 +53,8 @@ impl Menu {
                         self.active_idx + 1
                     } else {
                         self.active_idx
-                    }
+                    };
+                    None
                 }
                 // handle menu up
                 VirtualKeyCode::Up => {
@@ -55,12 +62,14 @@ impl Menu {
                         self.active_idx - 1
                     } else {
                         self.active_idx
-                    }
+                    };
+                    None
                 }
                 // save choice
-                VirtualKeyCode::Space => self.choice = Some(self.active_idx),
-                _ => {}
+                VirtualKeyCode::Space => Some(ITEMS[self.active_idx].1),
+                _ => None,
             },
+            _ => None,
         }
     }
 }
